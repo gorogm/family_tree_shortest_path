@@ -1,12 +1,12 @@
 from gedcom.parser import Parser
 import streamlit as st
+import pickle
 
 from utils import *
-import pickle
+import gm_secrets
 
 st.set_page_config(layout="wide")
 
-import gm_secrets
 
 def check_password():
     """Returns `True` if the user had the correct password."""
