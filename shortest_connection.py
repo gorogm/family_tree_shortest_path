@@ -46,13 +46,13 @@ def main():
     p1_2 = col2.text_input('1. személy keresztnév:', value="Márton Jenő")
     p1_filter_birth = col3.checkbox('Szűrés születési évre', key='p1_filter_birth')
     if p1_filter_birth:
-        p1_birth = col4.number_input('1. személy születési év:', min_value=1600, max_value=2022, format='%d')
+        p1_birth = col4.number_input('1. személy születési év:', min_value=1300, max_value=2023, format='%d')
     col1, col2, col3, col4 = st.columns(4)
     p2_1 = col1.text_input('2. személy vezetéknév:', value="Andrássy")
     p2_2 = col2.text_input('2. személy keresztnév:', value="Ilona")
     p2_filter_birth = col3.checkbox('Szűrés születési évre', key='p2_filter_birth')
     if p2_filter_birth:
-        p2_birth = col4.number_input('1. személy születési év:', min_value=1600, max_value=2022, format='%d')
+        p2_birth = col4.number_input('2. személy születési év:', min_value=1300, max_value=2023, format='%d')
 
     if st.button('Keress'):
         try:
