@@ -88,7 +88,7 @@ def drawJumps(gedcom_parser, target, jumps):
         if getRelationDirection(gedcom_parser, current, new_current)  == -1:
             f.edge(str(i), str(i+1), label='')
         if getRelationDirection(gedcom_parser, current, new_current)  == 0:
-            f.edge(str(i), str(i+1), label='', constraint='False')
+            f.edge(str(i), str(i+1), label='', constraint='False', dir = 'none')
         current = new_current
 
     i+=1

@@ -1,6 +1,7 @@
 from gedcom.parser import Parser
 import streamlit as st
 import pickle
+import datetime
 
 from utils import *
 import gm_secrets
@@ -36,6 +37,16 @@ def check_password():
         # Password correct.
         return True
 
+gedcom_parser = None
+
+@st.experimental_singleton
+def get_database_session():
+    global gedcom_parser
+    if gedcom_parser is None:
+        st.write('Családfa betöltése (~30 másodperc)...')
+        with open('gedcom_parser.bin', 'rb') as handle:
+            gedcom_parser = pickle.load(handle)
+    return gedcom_parser
 
 def main():
     st.title('Legrövidebb út két ember között a Hollai/Görög családfában')
@@ -43,7 +54,7 @@ def main():
 
     col1, col2, col3, col4 = st.columns(4)
     p1_1 = col1.text_input('1. személy vezetéknév:', value="Görög")
-    p1_2 = col2.text_input('1. személy keresztnév:', value="Márton Jenő")
+    p1_2 = col2.text_input('1. személy keresztnév:', value="Márton")
     p1_filter_birth = col3.checkbox('Szűrés születési évre', key='p1_filter_birth')
     if p1_filter_birth:
         p1_birth = col4.number_input('1. személy születési év:', min_value=1300, max_value=2023, format='%d')
@@ -55,12 +66,7 @@ def main():
         p2_birth = col4.number_input('2. személy születési év:', min_value=1300, max_value=2023, format='%d')
 
     if st.button('Keress'):
-        try:
-            gedcom_parser
-        except NameError:
-            st.write('Családfa betöltése (~30 másodperc)...')
-            with open('gedcom_parser.bin', 'rb') as handle:
-                gedcom_parser = pickle.load(handle)
+        gedcom_parser = get_database_session()
 
         root_child_elements = gedcom_parser.get_root_child_elements()
 
@@ -75,6 +81,7 @@ def main():
 
         st.write('Kapcsolat keresése...')
         jumps = findConnection(gedcom_parser, p1, p2)
+        print(datetime.datetime.now(), toString(p1) , toString(p2))
 
         st.write('Kirajzolás...')
         img = drawJumps(gedcom_parser, p2, jumps)
