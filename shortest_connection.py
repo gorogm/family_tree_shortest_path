@@ -1,3 +1,4 @@
+from pkgutil import get_data
 from gedcom.parser import Parser
 import streamlit as st
 import pickle
@@ -49,45 +50,83 @@ def get_database_session():
     return gedcom_parser
 
 def main():
-    st.title('Legrövidebb út két ember között a Hollai/Görög családfában')
-    st.write('Add meg a két személy nevét, majd kattints a gombra. Név-töredék is megadható, viszont kisbetű-nagybetű érzékeny. Az évszám nem kötelező, de segíthet szűkíteni. 1800')
+    funkcio_selectbox = st.sidebar.selectbox("Funkció választás", ("Legrövidebb út 2 ember között", "Név lista keresése a családfában"))
 
-    col1, col2, col3, col4 = st.columns(4)
-    p1_1 = col1.text_input('1. személy vezetéknév:', value="Görög")
-    p1_2 = col2.text_input('1. személy keresztnév:', value="Márton")
-    p1_filter_birth = col3.checkbox('Szűrés születési évre', key='p1_filter_birth')
-    if p1_filter_birth:
-        p1_birth = col4.number_input('1. személy születési év:', min_value=1300, max_value=2023, format='%d')
-    col1, col2, col3, col4 = st.columns(4)
-    p2_1 = col1.text_input('2. személy vezetéknév:', value="Andrássy")
-    p2_2 = col2.text_input('2. személy keresztnév:', value="Ilona")
-    p2_filter_birth = col3.checkbox('Szűrés születési évre', key='p2_filter_birth')
-    if p2_filter_birth:
-        p2_birth = col4.number_input('2. személy születési év:', min_value=1300, max_value=2023, format='%d')
+    if funkcio_selectbox == "Legrövidebb út 2 ember között":
+        st.title('Legrövidebb út két ember között a Hollai/Görög családfában')
+        st.write('Add meg a két személy nevét, majd kattints a gombra. Név-töredék is megadható, viszont kisbetű-nagybetű érzékeny. Az évszám nem kötelező, de segíthet szűkíteni.')
 
-    if st.button('Keress'):
-        gedcom_parser = get_database_session()
+        col1, col2, col3, col4 = st.columns(4)
+        p1_1 = col1.text_input('1. személy vezetéknév:', value="Görög")
+        p1_2 = col2.text_input('1. személy keresztnév:', value="Márton")
+        p1_filter_birth = col3.checkbox('Szűrés születési évre', key='p1_filter_birth')
+        if p1_filter_birth:
+            p1_birth = col4.number_input('1. személy születési év:', min_value=1300, max_value=2023, format='%d')
+        col1, col2, col3, col4 = st.columns(4)
+        p2_1 = col1.text_input('2. személy vezetéknév:', value="Andrássy")
+        p2_2 = col2.text_input('2. személy keresztnév:', value="Ilona")
+        p2_filter_birth = col3.checkbox('Szűrés születési évre', key='p2_filter_birth')
+        if p2_filter_birth:
+            p2_birth = col4.number_input('2. személy születési év:', min_value=1300, max_value=2023, format='%d')
 
-        root_child_elements = gedcom_parser.get_root_child_elements()
+        if st.button('Keress'):
+            gedcom_parser = get_database_session()
 
-        p1 = find(root_child_elements, p1_1, p1_2, p1_birth if p1_filter_birth else None)
-        if p1 is None:
-            st.error(p1_1 + ' ' + p1_2 + ' nem található')
-            return
-        p2 = find(root_child_elements, p2_1, p2_2, p2_birth if p2_filter_birth else None)
-        if p2 is None:
-            st.error(p2_1 + ' ' + p2_2 + ' nem található')
-            return
+            root_child_elements = gedcom_parser.get_root_child_elements()
 
-        st.write('Kapcsolat keresése...')
-        jumps = findConnection(gedcom_parser, p1, p2)
-        print(datetime.datetime.now(), toString(p1) , toString(p2))
+            p1 = find(root_child_elements, p1_1, p1_2, p1_birth if p1_filter_birth else None)
+            if p1 is None:
+                st.error(p1_1 + ' ' + p1_2 + ' nem található')
+                return
+            p2 = find(root_child_elements, p2_1, p2_2, p2_birth if p2_filter_birth else None)
+            if p2 is None:
+                st.error(p2_1 + ' ' + p2_2 + ' nem található')
+                return
 
-        st.write('Kirajzolás...')
-        img = drawJumps(gedcom_parser, p2, jumps)
+            st.write('Kapcsolat keresése...')
+            jumps = findConnection(gedcom_parser, p1, p2)
+            print(datetime.datetime.now(), toString(p1) , toString(p2))
 
-        st.image(img.render())
-    
+            st.write('Kirajzolás...')
+            img = drawJumps(gedcom_parser, p2, jumps)
+
+            st.image(img.render())
+
+    if funkcio_selectbox == "Név lista keresése a családfában":
+        st.title('Nevek ellenőrzése a családfában')
+        st.write('Adj meg egy név-listát, amit a program összevet a családfán szereplő nevekkel, és az egyezéseket listázza')
+        st.write('Soronként egy embert szerepeltess. Vezetéknév keresztnév sorrendben. Az első szóközig tételezi fel a vezetéknevet, utána jön a keresztnév. Lehet név-töredék is, de pont nélkül és kisbetű-nagybetű helyesen (pl. Habs Károly )')
+        
+        col0, col1, col2 = st.columns(3)
+        lines = col0.text_area('Név lista', value='Görög Demeter\r\nGipsz Jakab\r\nHabsburg Károly', height=400).replace('\r', '\n').replace('\n\n', '\n').split('\n')
+        print('Tömeges név-ellenőrzés ennyi névvel: ' + str(len(lines)))
+        show_only_fresh = col0.checkbox('Csak 1900 után születetteket, vagy ismeretlen születési évűeket mutasson')
+        col1.write('')
+        col2.write('')
+
+        if st.button('Keress'):
+            gedcom_parser = get_database_session()
+
+            root_child_elements = gedcom_parser.get_root_child_elements()
+
+            st.write('Találatok:')
+
+            for line in lines:
+                parts = line.split(' ')
+                if len(parts) < 2:
+                    st.write(line + ' kihagyva, mert nincs keresztneve')
+                    continue
+                for element in root_child_elements:
+                    if isinstance(element, IndividualElement):
+                        if show_only_fresh and element.get_birth_year() != -1 and element.get_birth_year() < 1900:
+                            continue
+                        (first, last) = element.get_name()
+                        if parts[0] in last and parts[1] in first:
+                                st.write(toString(element))
+                        if parts[1] in last and parts[0] in first:
+                                st.write(toString(element))
+            st.write('-kész-')
+        
 
 if check_password():
     main()

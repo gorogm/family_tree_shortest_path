@@ -8,7 +8,8 @@ def find(root_child_elements, family_name, given_name, birthyear=None):
             if family_name in last and given_name in first:
                 if birthyear is None:
                     return element
-                if element.get_birth_year() == -1 or element.get_birth_year() == birthyear:
+                # if element.get_birth_year() == -1 or element.get_birth_year() == birthyear:
+                if element.get_birth_year() == birthyear:
                     return element
     return None
                     
