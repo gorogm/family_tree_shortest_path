@@ -12,9 +12,24 @@ def find(root_child_elements, family_name, given_name, birthyear=None):
                 if element.get_birth_year() == birthyear:
                     return element
     return None
-                    
-def toString(p):
+
+def findPersonByID(gedcom_parser, id):
+    if 'I' not in id:
+        id = 'I' + id
+    if '@' not in id:
+        id = '@' + id + '@'
+        
+    all = gedcom_parser.get_element_dictionary()
+
+    if id in all.keys():
+        return all[id]
+    else:
+        return None
+
+def toString(p, with_id=False):
     string = p.get_name()[1] + ' ' + p.get_name()[0]
+    if with_id:
+        string = p._Element__pointer.replace('@', '') + ' ' + string
     birthyear = p.get_birth_year()
     deathyear = p.get_death_year()
 
@@ -96,3 +111,30 @@ def drawJumps(gedcom_parser, target, jumps):
     f.node(str(i), label = toString(current), _attributes={'color':'lightpink' if current.get_gender()=='F' else 'lightblue'if current.get_gender()=='M' else 'lightgray'})
 
     return f
+
+def getTotalCount(root_child_elements):
+    i = 0
+    for element in root_child_elements:
+        if isinstance(element, IndividualElement):
+            i += 1
+    return i
+
+
+def getAllReachableFromPeople(gedcom_parser, p1):
+    visited = set([p1])
+    leaves = set([p1])
+    while len(leaves) > 0:
+        leaves_this_round = leaves.copy()
+        leaves = set()
+        for l in leaves_this_round:
+            families = gedcom_parser.get_families(l)
+            for f in families:
+                for p in gedcom_parser.get_family_members(f):
+                    if p not in visited:
+                        visited.add(p)
+                        leaves.add(p)
+            for p in gedcom_parser.get_parents(l):
+                if p not in visited:
+                    visited.add(p)
+                    leaves.add(p)
+    return visited

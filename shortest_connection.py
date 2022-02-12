@@ -50,9 +50,9 @@ def get_database_session():
     return gedcom_parser
 
 def main():
-    funkcio_selectbox = st.sidebar.selectbox("Funkció választás", ("Legrövidebb út 2 ember között", "Név lista keresése a családfában"))
+    funkcio_selectbox = st.sidebar.selectbox("Funkció választás", ("Legrövidebb út, név alapján", "Legrövidebb út, ID alapján", "Név lista keresése a családfában"))
 
-    if funkcio_selectbox == "Legrövidebb út 2 ember között":
+    if funkcio_selectbox == "Legrövidebb út, név alapján":
         st.title('Legrövidebb út két ember között a Hollai/Görög családfában')
         st.write('Add meg a két személy nevét, majd kattints a gombra. Név-töredék is megadható, viszont kisbetű-nagybetű érzékeny. Az évszám nem kötelező, de segíthet szűkíteni.')
 
@@ -82,6 +82,41 @@ def main():
             if p2 is None:
                 st.error(p2_1 + ' ' + p2_2 + ' nem található')
                 return
+
+            st.write('Kapcsolat keresése...')
+            jumps = findConnection(gedcom_parser, p1, p2)
+            print(datetime.datetime.now(), toString(p1) , toString(p2))
+
+            st.write('Kirajzolás...')
+            img = drawJumps(gedcom_parser, p2, jumps)
+
+            st.image(img.render())
+
+    if funkcio_selectbox == "Legrövidebb út, ID alapján":
+        st.title('Legrövidebb út két ember között a Hollai/Görög családfában')
+        st.write('Add meg a két személy ID-ját, majd kattints a gombra.')
+
+        col1, col2, col3, col4 = st.columns(4)
+        p1_id = col1.text_input('1. személy ID:', value="605084")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        p2_id = col1.text_input('2. személy ID:', value="I533566")
+        
+        if st.button('Keress'):
+            gedcom_parser = get_database_session()
+
+            root_child_elements = gedcom_parser.get_root_child_elements()
+
+            p1 = findPersonByID(gedcom_parser, p1_id)
+            if p1 is None:
+                st.error(p1_id + ' nem található')
+                return
+            st.write(f'{p1_id} = {toString(p1)}')
+            p2 = findPersonByID(gedcom_parser, p2_id)
+            if p2 is None:
+                st.error(p2_id + ' nem található')
+                return
+            st.write(f'{p2_id} = {toString(p2)}')
 
             st.write('Kapcsolat keresése...')
             jumps = findConnection(gedcom_parser, p1, p2)
