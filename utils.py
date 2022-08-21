@@ -138,3 +138,18 @@ def getAllReachableFromPeople(gedcom_parser, p1):
                     visited.add(p)
                     leaves.add(p)
     return visited
+
+def getMale(lista):
+    for l in lista:
+        if l.get_gender() == 'M':
+            return l
+    return None
+def getFemale(lista):
+    for l in lista:
+        if l.get_gender() == 'F':
+            return l
+    return None
+def areNamesSame(p1, p2):
+    if p1 is None or p2 is None:
+        return False
+    return p1.get_name()[0] == p2.get_name()[0] and p1.get_name()[1] == p2.get_name()[1]
